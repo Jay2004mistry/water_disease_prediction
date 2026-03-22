@@ -18,8 +18,11 @@ import numpy as np
 #   Flask(__name__) → starts backend app
 app=Flask(__name__)
 # CORS(app) → allows frontend (localhost:3000) to talk with Flask (to connect)
-CORS(app)
-
+CORS(app, origins=[
+    "https://jay2004mistry.github.io",
+    "http://127.0.0.1:5500",
+    "http://localhost:5500"
+])
 
 #load (file and scaler) once  after connect with API
 with open('Linear_reg_model_for_disease_water.pkl','rb') as f:
