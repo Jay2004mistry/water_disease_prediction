@@ -1,0 +1,456 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>AquaPredict — Disease Risk Estimator</title>
+  <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg:      #080f14;
+      --surface: #0d1a24;
+      --card:    #111f2c;
+      --border:  rgba(0,200,140,0.12);
+      --accent:  #00c88c;
+      --accent2: #00a3ff;
+      --amber:   #ffb84d;
+      --text:    #e8f0ee;
+      --muted:   #5a7a70;
+      --label:   #3a5a50;
+    }
+    * { margin:0; padding:0; box-sizing:border-box; }
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: 'DM Sans', sans-serif;
+      min-height: 100vh;
+      padding: 2rem 1rem 4rem;
+      background-image:
+        radial-gradient(ellipse 80% 50% at 50% -20%, rgba(0,200,140,0.07) 0%, transparent 60%),
+        radial-gradient(ellipse 40% 30% at 90% 80%, rgba(0,163,255,0.05) 0%, transparent 50%);
+    }
+    header {
+      text-align: center;
+      max-width: 600px;
+      margin: 0 auto 3rem;
+      animation: fadeDown 0.7s ease both;
+    }
+    .logo { display:inline-flex; align-items:center; gap:10px; margin-bottom:1.25rem; }
+    .logo-icon {
+      width:40px; height:40px; border-radius:10px;
+      background: linear-gradient(135deg, var(--accent), var(--accent2));
+      display:flex; align-items:center; justify-content:center; font-size:20px;
+    }
+    .logo-text {
+      font-family:'Syne',sans-serif; font-size:22px;
+      font-weight:800; letter-spacing:-0.5px;
+    }
+    header h1 {
+      font-family:'Syne',sans-serif;
+      font-size: clamp(28px,5vw,42px);
+      font-weight:800; letter-spacing:-1px; line-height:1.15;
+      background: linear-gradient(135deg,#fff 40%,var(--accent));
+      -webkit-background-clip:text; -webkit-text-fill-color:transparent; background-clip:text;
+      margin-bottom:0.75rem;
+    }
+    header p { color:var(--muted); font-size:15px; font-weight:300; line-height:1.6; }
+
+    .main { max-width:920px; margin:0 auto; display:flex; flex-direction:column; gap:1.5rem; }
+
+    .section-card {
+      background:var(--card); border:1px solid var(--border);
+      border-radius:20px; padding:1.75rem 2rem;
+      animation: fadeUp 0.6s ease both;
+    }
+    .section-card:nth-child(2) { animation-delay:0.1s; }
+    .section-card:nth-child(3) { animation-delay:0.2s; }
+    .section-card:nth-child(4) { animation-delay:0.3s; }
+
+    .section-header { display:flex; align-items:center; gap:10px; margin-bottom:1.25rem; }
+    .section-dot { width:8px; height:8px; border-radius:50%; flex-shrink:0; }
+    .dot-green { background:var(--accent);  box-shadow:0 0 8px var(--accent); }
+    .dot-blue  { background:var(--accent2); box-shadow:0 0 8px var(--accent2); }
+    .dot-amber { background:var(--amber);   box-shadow:0 0 8px var(--amber); }
+    .section-title {
+      font-family:'Syne',sans-serif; font-size:11px; font-weight:700;
+      letter-spacing:2px; text-transform:uppercase; color:var(--muted);
+    }
+
+    .grid { display:grid; grid-template-columns:repeat(3,1fr); gap:14px; }
+    @media(max-width:640px){ .grid{ grid-template-columns:1fr 1fr; } }
+    @media(max-width:420px){ .grid{ grid-template-columns:1fr; } }
+
+    .field label { display:block; font-size:11px; font-weight:500; color:var(--muted); margin-bottom:6px; letter-spacing:0.3px; }
+    .field input, .field select {
+      width:100%; padding:10px 14px;
+      background:var(--surface); border:1px solid var(--label);
+      border-radius:10px; color:var(--text);
+      font-family:'DM Sans',sans-serif; font-size:14px;
+      outline:none; transition:border-color 0.2s, box-shadow 0.2s;
+    }
+    .field input::placeholder { color:var(--label); }
+    .field input:focus, .field select:focus {
+      border-color:var(--accent); box-shadow:0 0 0 3px rgba(0,200,140,0.1);
+    }
+    .field select {
+      cursor:pointer; appearance:none;
+      background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' fill='none'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%235a7a70' stroke-width='1.5' stroke-linecap='round'/%3E%3C/svg%3E");
+      background-repeat:no-repeat; background-position:right 14px center; padding-right:36px;
+    }
+    .field select option { background:var(--card); }
+
+    .btn-wrap { animation:fadeUp 0.6s 0.35s ease both; }
+    .btn {
+      width:100%; padding:16px;
+      background:linear-gradient(135deg,var(--accent),#00a87a);
+      color:#000; border:none; border-radius:14px;
+      font-family:'Syne',sans-serif; font-size:15px; font-weight:700;
+      letter-spacing:0.5px; cursor:pointer;
+      transition:transform 0.15s, box-shadow 0.2s, opacity 0.2s;
+      box-shadow:0 4px 24px rgba(0,200,140,0.25);
+    }
+    .btn:hover    { transform:translateY(-2px); box-shadow:0 8px 32px rgba(0,200,140,0.35); }
+    .btn:active   { transform:scale(0.99); }
+    .btn:disabled { opacity:0.5; cursor:not-allowed; transform:none; }
+
+    .msg { display:none; margin-top:1rem; padding:12px 16px; border-radius:10px; font-size:13px; text-align:center; }
+    .msg.error   { display:block; background:rgba(255,94,94,0.1);  color:#ff5e5e; border:1px solid rgba(255,94,94,0.2); }
+    .msg.loading { display:block; background:rgba(0,200,140,0.08); color:var(--accent); border:1px solid rgba(0,200,140,0.15); }
+
+    .results { display:none; animation:fadeUp 0.5s ease both; }
+    .results.show { display:block; }
+    .results-header { display:flex; align-items:center; justify-content:space-between; margin-bottom:1rem; }
+    .results-title { font-family:'Syne',sans-serif; font-size:11px; font-weight:700; letter-spacing:2px; text-transform:uppercase; color:var(--muted); }
+    .results-badge { font-size:11px; padding:3px 10px; border-radius:20px; background:rgba(0,200,140,0.1); color:var(--accent); border:1px solid rgba(0,200,140,0.2); }
+
+    .result-grid { display:grid; grid-template-columns:repeat(2,1fr); gap:12px; }
+    @media(max-width:500px){ .result-grid{ grid-template-columns:1fr; } }
+
+    .result-card {
+      background:var(--surface); border:1px solid var(--border);
+      border-radius:14px; padding:1.25rem 1.5rem;
+      position:relative; overflow:hidden; transition:transform 0.2s;
+    }
+    .result-card:hover { transform:translateY(-2px); }
+    .result-card::before { content:''; position:absolute; top:0; left:0; right:0; height:2px; }
+    .result-card:nth-child(1)::before { background:linear-gradient(90deg,var(--accent),transparent); }
+    .result-card:nth-child(2)::before { background:linear-gradient(90deg,var(--accent2),transparent); }
+    .result-card:nth-child(3)::before { background:linear-gradient(90deg,var(--amber),transparent); }
+    .result-card:nth-child(4)::before { background:linear-gradient(90deg,#c084fc,transparent); }
+
+    .result-label { font-size:11px; color:var(--muted); margin-bottom:8px; font-weight:500; }
+    .result-value { font-family:'Syne',sans-serif; font-size:36px; font-weight:800; line-height:1; margin-bottom:4px; }
+    .result-card:nth-child(1) .result-value { color:var(--accent); }
+    .result-card:nth-child(2) .result-value { color:var(--accent2); }
+    .result-card:nth-child(3) .result-value { color:var(--amber); }
+    .result-card:nth-child(4) .result-value { color:#c084fc; }
+    .result-unit { font-size:11px; color:var(--label); }
+
+    footer { text-align:center; margin-top:3rem; font-size:12px; color:var(--label); }
+
+    @keyframes fadeDown { from{opacity:0;transform:translateY(-20px)} to{opacity:1;transform:translateY(0)} }
+    @keyframes fadeUp   { from{opacity:0;transform:translateY(20px)}  to{opacity:1;transform:translateY(0)} }
+
+    .spinner {
+      display:inline-block; width:14px; height:14px;
+      border:2px solid rgba(0,200,140,0.2); border-top-color:var(--accent);
+      border-radius:50%; animation:spin 0.7s linear infinite;
+      margin-right:8px; vertical-align:middle;
+    }
+    @keyframes spin { to{ transform:rotate(360deg); } }
+  </style>
+</head>
+<body>
+
+<header>
+  <div class="logo">
+    <div class="logo-icon">💧</div>
+    <div class="logo-text">AquaPredict</div>
+  </div>
+  <h1>Disease Risk Estimator</h1>
+  <p>Enter water quality and regional parameters to predict disease burden using machine learning</p>
+</header>
+
+<div class="main">
+
+  <!-- WATER QUALITY -->
+  <div class="section-card">
+    <div class="section-header">
+      <div class="section-dot dot-green"></div>
+      <div class="section-title">Water Quality Parameters</div>
+    </div>
+    <div class="grid">
+      <div class="field">
+        <label>Contaminant Level (ppm)</label>
+        <input type="number" id="contaminant" placeholder="e.g. 5.2" step="0.1">
+      </div>
+      <div class="field">
+        <label>pH Level</label>
+        <input type="number" id="ph" placeholder="e.g. 6.8" step="0.1">
+      </div>
+      <div class="field">
+        <label>Turbidity (NTU)</label>
+        <input type="number" id="turbidity" placeholder="e.g. 12.5" step="0.1">
+      </div>
+      <div class="field">
+        <label>Dissolved Oxygen (mg/L)</label>
+        <input type="number" id="dissolved_oxygen" placeholder="e.g. 7.1" step="0.1">
+      </div>
+      <div class="field">
+        <label>Nitrate Level (mg/L)</label>
+        <input type="number" id="nitrate" placeholder="e.g. 4.3" step="0.1">
+      </div>
+      <div class="field">
+        <label>Lead Concentration (µg/L)</label>
+        <input type="number" id="lead" placeholder="e.g. 18.0" step="0.1">
+      </div>
+      <div class="field">
+        <label>Bacteria Count (CFU/mL)</label>
+        <input type="number" id="bacteria" placeholder="e.g. 4500">
+      </div>
+    </div>
+  </div>
+
+  <!-- INFRASTRUCTURE -->
+  <div class="section-card">
+    <div class="section-header">
+      <div class="section-dot dot-blue"></div>
+      <div class="section-title">Infrastructure & Access</div>
+    </div>
+    <div class="grid">
+
+      <!-- Water Source — real names, value = encoded number -->
+      <div class="field">
+        <label>Water Source Type</label>
+        <select id="water_source">
+          <option value="0">Lake</option>
+          <option value="1">Pond</option>
+          <option value="2">River</option>
+          <option value="3">Spring</option>
+          <option value="4">Tap</option>
+          <option value="5">Well</option>
+        </select>
+      </div>
+
+      <!-- Treatment — real names -->
+      <div class="field">
+        <label>Water Treatment Method</label>
+        <select id="treatment">
+          <option value="0">Boiling</option>
+          <option value="1">Chlorination</option>
+          <option value="2">Filtration</option>
+          <option value="3">None</option>
+        </select>
+      </div>
+
+      <div class="field">
+        <label>Access to Clean Water (%)</label>
+        <input type="number" id="access_water" placeholder="e.g. 45" step="0.1">
+      </div>
+      <div class="field">
+        <label>Sanitation Coverage (%)</label>
+        <input type="number" id="sanitation" placeholder="e.g. 29" step="0.1">
+      </div>
+    </div>
+  </div>
+
+  <!-- SOCIO-ECONOMIC -->
+  <div class="section-card">
+    <div class="section-header">
+      <div class="section-dot dot-amber"></div>
+      <div class="section-title">Socio-Economic & Environment</div>
+    </div>
+    <div class="grid">
+
+      <!-- Country — real names, value = encoded number -->
+      <div class="field">
+        <label>Country</label>
+        <select id="country">
+          <option value="0">Bangladesh</option>
+          <option value="1">Brazil</option>
+          <option value="2">China</option>
+          <option value="3">Ethiopia</option>
+          <option value="4">India</option>
+          <option value="5">Indonesia</option>
+          <option value="6">Mexico</option>
+          <option value="7">Nigeria</option>
+          <option value="8">Pakistan</option>
+          <option value="9">USA</option>
+        </select>
+      </div>
+
+      <!-- Region — real names -->
+      <div class="field">
+        <label>Region</label>
+        <select id="region">
+          <option value="0">Central</option>
+          <option value="1">East</option>
+          <option value="2">North</option>
+          <option value="3">South</option>
+          <option value="4">West</option>
+        </select>
+      </div>
+
+      <div class="field">
+        <label>Year</label>
+        <input type="number" id="year" placeholder="e.g. 2024">
+      </div>
+      <div class="field">
+        <label>GDP per Capita (USD)</label>
+        <input type="number" id="gdp" placeholder="e.g. 1800">
+      </div>
+      <div class="field">
+        <label>Healthcare Access (0–100)</label>
+        <input type="number" id="healthcare" placeholder="e.g. 32" step="0.1">
+      </div>
+      <div class="field">
+        <label>Urbanization Rate (%)</label>
+        <input type="number" id="urbanization" placeholder="e.g. 38" step="0.1">
+      </div>
+      <div class="field">
+        <label>Rainfall (mm/year)</label>
+        <input type="number" id="rainfall" placeholder="e.g. 820">
+      </div>
+      <div class="field">
+        <label>Temperature (°C)</label>
+        <input type="number" id="temperature" placeholder="e.g. 28.5" step="0.1">
+      </div>
+      <div class="field">
+        <label>Population Density (per km²)</label>
+        <input type="number" id="population_density" placeholder="e.g. 310">
+      </div>
+    </div>
+  </div>
+
+  <!-- BUTTON -->
+  <div class="btn-wrap">
+    <button class="btn" onclick="predict()" id="predictBtn">Run Prediction</button>
+    <div class="msg" id="msg"></div>
+  </div>
+
+  <!-- RESULTS -->
+  <div class="results" id="results">
+    <div class="section-card">
+      <div class="results-header">
+        <div class="results-title">Prediction Results</div>
+        <div class="results-badge">per 100,000 people</div>
+      </div>
+      <div class="result-grid">
+        <div class="result-card">
+          <div class="result-label">Diarrheal Cases</div>
+          <div class="result-value" id="r_diarrheal">--</div>
+          <div class="result-unit">cases per 100,000</div>
+        </div>
+        <div class="result-card">
+          <div class="result-label">Cholera Cases</div>
+          <div class="result-value" id="r_cholera">--</div>
+          <div class="result-unit">cases per 100,000</div>
+        </div>
+        <div class="result-card">
+          <div class="result-label">Typhoid Cases</div>
+          <div class="result-value" id="r_typhoid">--</div>
+          <div class="result-unit">cases per 100,000</div>
+        </div>
+        <div class="result-card">
+          <div class="result-label">Infant Mortality Rate</div>
+          <div class="result-value" id="r_infant">--</div>
+          <div class="result-unit">per 1,000 live births</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<footer>AquaPredict &nbsp;·&nbsp; Powered by Linear Regression ML Model &nbsp;·&nbsp; Flask API</footer>
+
+<script>
+  // ── encoding maps (from LabelEncoder in notebook) ─────────────────────────
+  // client sees real names, these values are the encoded numbers sent to API
+  // Country:   Bangladesh=0, Brazil=1, China=2, Ethiopia=3, India=4,
+  //            Indonesia=5, Mexico=6, Nigeria=7, Pakistan=8, USA=9
+  // Region:    Central=0, East=1, North=2, South=3, West=4
+  // Source:    Lake=0, Pond=1, River=2, Spring=3, Tap=4, Well=5
+  // Treatment: Boiling=0, Chlorination=1, Filtration=2, None=3
+
+  async function predict() {
+    const msg     = document.getElementById('msg');
+    const results = document.getElementById('results');
+    const btn     = document.getElementById('predictBtn');
+
+    // ── collect all 20 features in exact x.columns order ────────────────────
+    const fieldIds = [
+      'country',           // Country (encoded via dropdown)
+      'region',            // Region  (encoded via dropdown)
+      'year',              // Year
+      'water_source',      // Water Source Type (encoded via dropdown)
+      'contaminant',       // Contaminant Level (ppm)
+      'ph',                // pH Level
+      'turbidity',         // Turbidity (NTU)
+      'dissolved_oxygen',  // Dissolved Oxygen (mg/L)
+      'nitrate',           // Nitrate Level (mg/L)
+      'lead',              // Lead Concentration (µg/L)
+      'bacteria',          // Bacteria Count (CFU/mL)
+      'treatment',         // Water Treatment Method (encoded via dropdown)
+      'access_water',      // Access to Clean Water (%)
+      'gdp',               // GDP per Capita (USD)
+      'healthcare',        // Healthcare Access Index
+      'urbanization',      // Urbanization Rate (%)
+      'sanitation',        // Sanitation Coverage (%)
+      'rainfall',          // Rainfall (mm/year)
+      'temperature',       // Temperature (°C)
+      'population_density' // Population Density
+    ];
+
+    // ── validate + collect ───────────────────────────────────────────────────
+    const features = [];
+    for (let id of fieldIds) {
+      const el  = document.getElementById(id);
+      const val = el.tagName === 'SELECT' ? el.value : el.value;
+      if (val === '') {
+        msg.className = 'msg error';
+        msg.textContent = '⚠ Please fill in all fields before predicting.';
+        results.classList.remove('show');
+        return;
+      }
+      features.push(parseFloat(val));
+    }
+
+    // ── loading ──────────────────────────────────────────────────────────────
+    msg.className = 'msg loading';
+    msg.innerHTML = '<span class="spinner"></span>Running model prediction...';
+    btn.disabled = true;
+    btn.textContent = 'Predicting...';
+    results.classList.remove('show');
+
+    // ── call Flask API ───────────────────────────────────────────────────────
+    try {
+      const response = await fetch('http://127.0.0.1:5000/predict', {
+        method : 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body   : JSON.stringify({ features: features })
+      });
+
+      const data = await response.json();
+
+      document.getElementById('r_diarrheal').textContent = data.Diarrheal;
+      document.getElementById('r_cholera').textContent   = data.Cholera;
+      document.getElementById('r_typhoid').textContent   = data.Typhoid;
+      document.getElementById('r_infant').textContent    = data.Infant_Mortality;
+
+      msg.style.display = 'none';
+      msg.className = 'msg';
+      results.classList.add('show');
+
+    } catch (err) {
+      msg.className = 'msg error';
+      msg.textContent = '⚠ Cannot connect to API. Make sure app.py is running on port 5000.';
+    }
+
+    btn.disabled = false;
+    btn.textContent = 'Run Prediction';
+  }
+</script>
+
+</body>
+</html>
