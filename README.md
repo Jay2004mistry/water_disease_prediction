@@ -209,3 +209,6 @@ Accepts water quality features and returns disease predictions.
 
 ---
 
+Live:-
+https://jay2004mistry.github.io/water_disease_prediction/
+](https://jay2004mistry.github.io/water_disease_prediction/)](https://jay2004mistry.github.io/water_disease_prediction/)
