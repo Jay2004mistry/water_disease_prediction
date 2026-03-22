@@ -208,7 +208,9 @@ Accepts water quality features and returns disease predictions.
 - Negative predictions are clipped to 0 using `np.clip()` in the API since disease cases cannot be negative.
 
 ---
+for live api use Rendor.com
+and for frontend use git hub
 
 Live:-
 https://jay2004mistry.github.io/water_disease_prediction/
-](https://jay2004mistry.github.io/water_disease_prediction/)](https://jay2004mistry.github.io/water_disease_prediction/)
+
